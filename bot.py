@@ -46,12 +46,12 @@ async def main():
         )
     )
 
-    llm = GroqLLMService(api_key=os.getenv("GROQ_API_KEY"), model="llama-3.1-70b-versatile")
+    llm = GroqLLMService(api_key=os.environ.get("GROQ_API_KEY"), model="llama-3.1-70b-versatile")
 
-    stt = DeepgramSTTService(api_key=os.getenv("DEEPGRAM_API_KEY"))
+    stt = DeepgramSTTService(api_key=os.environ.get("DEEPGRAM_API_KEY"))
 
     tts = CartesiaTTSService(
-        api_key=os.getenv("CARTESIA_API_KEY"),
+        api_key=os.environ.get("CARTESIA_API_KEY"),
         voice_id="79a125e8-cd45-4c13-8a67-188112f4dd22",  # British Lady
         sample_rate=16000,
     )
