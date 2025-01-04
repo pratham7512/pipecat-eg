@@ -35,6 +35,8 @@ logger.add(sys.stderr, level="DEBUG")
 async def main():
     transport = WebsocketServerTransport(
         params=WebsocketServerParams(
+            host="0.0.0.0",  # Add this line to bind to all interfaces
+            port=8765,
             audio_out_sample_rate=16000,
             audio_out_enabled=True,
             add_wav_header=True,
