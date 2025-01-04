@@ -7,9 +7,9 @@
 import asyncio
 import os
 import sys
-from sys import platform  # Import platform to check OS
+from pathlib import Path
+from sys import platform
 
-from dotenv import load_dotenv
 from loguru import logger
 
 from pipecat.audio.vad.silero import SileroVADAnalyzer
@@ -26,12 +26,38 @@ from pipecat.transports.network.websocket_server import (
     WebsocketServerTransport,
 )
 
+def read_secret(secret_name):
+    secret_path = Path("/etc/secrets") / secret_name
+    if secret_path.exists():
+        return secret_path.read_text().strip()
+    return None
 
+# Read secrets directly
+GROQ_API_KEY = read_secret("GROQ_API_KEY")
+DEEPGRAM_API_KEY = read_secret("DEEPGRAM_API_KEY")
+CARTESIA_API_KEY = read_secret("CARTESIA_API_KEY")
 
+# Set environment variables
+if GROQ_API_KEY:
+    os.environ["GROQ_API_KEY"] = GROQ_API_KEY
+if DEEPGRAM_API_KEY:
+    os.environ["DEEPGRAM_API_KEY"] = DEEPGRAM_API_KEY
+if CARTESIA_API_KEY:
+    os.environ["CARTESIA_API_KEY"] = CARTESIA_API_KEY
 
-# Load environment variables
-load_dotenv("/etc/secrets/.env")
+def check_required_secrets():
+    missing_secrets = []
+    for key in ["GROQ_API_KEY", "DEEPGRAM_API_KEY", "CARTESIA_API_KEY"]:
+        if not os.getenv(key):
+            missing_secrets.append(key)
+    
+    if missing_secrets:
+        raise RuntimeError(f"Missing required secrets: {', '.join(missing_secrets)}")
 
+logger.remove(0)
+logger.add(sys.stderr, level="DEBUG")
+
+logger.debug("Starting application...")
 # Debug log the environment variables (masking sensitive data)
 for key in ["GROQ_API_KEY", "DEEPGRAM_API_KEY", "CARTESIA_API_KEY"]:
     value = os.getenv(key)
@@ -41,17 +67,12 @@ for key in ["GROQ_API_KEY", "DEEPGRAM_API_KEY", "CARTESIA_API_KEY"]:
     else:
         logger.warning(f"{key} not found in environment variables")
 
-logger.remove(0)
-logger.add(sys.stderr, level="DEBUG")
-
-logger.debug("Starting application...")
-logger.debug(f"GROQ API Key: {'*' * 4 + os.environ.get('GROQ_API_KEY')[-4:] if os.environ.get('GROQ_API_KEY') else 'Not found'}")
-logger.debug(f"DEEPGRAM API Key: {'*' * 4 + os.environ.get('DEEPGRAM_API_KEY')[-4:] if os.environ.get('DEEPGRAM_API_KEY') else 'Not found'}")
-logger.debug(f"CARTESIA API Key: {'*' * 4 + os.environ.get('CARTESIA_API_KEY')[-4:] if os.environ.get('CARTESIA_API_KEY') else 'Not found'}")
-
 async def main():
+    # Check for required secrets before starting
+    check_required_secrets()
+
     transport = WebsocketServerTransport(
-        host="0.0.0.0",  # Add this line to bind to all interfaces
+        host="0.0.0.0",
         port=10000,
         params=WebsocketServerParams(
             audio_out_sample_rate=16000,
@@ -62,13 +83,11 @@ async def main():
             vad_audio_passthrough=True,
         )
     )
-    print(f"this is groq api key = {os.getenv('GROQ_API_KEY')}")
-    llm = GroqLLMService(api_key=os.getenv("GROQ_API_KEY"), model="llama-3.1-70b-versatile")
 
-    stt = DeepgramSTTService(api_key=os.getenv("DEEPGRAM_API_KEY"))
-
+    llm = GroqLLMService(api_key=GROQ_API_KEY, model="llama-3.1-70b-versatile")
+    stt = DeepgramSTTService(api_key=DEEPGRAM_API_KEY)
     tts = CartesiaTTSService(
-        api_key=os.getenv("CARTESIA_API_KEY"),
+        api_key=CARTESIA_API_KEY,
         voice_id="79a125e8-cd45-4c13-8a67-188112f4dd22",  # British Lady
         sample_rate=16000,
     )
@@ -109,10 +128,9 @@ async def main():
     if platform == "win32":
         logger.warning("Signal handling is not supported on Windows. Skipping signal handler setup.")
     else:
-        runner._setup_sigint()  # Call this only if not on Windows
+        runner._setup_sigint()
 
     await runner.run(task)
-
 
 if __name__ == "__main__":
     asyncio.run(main())
