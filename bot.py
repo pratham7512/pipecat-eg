@@ -26,7 +26,20 @@ from pipecat.transports.network.websocket_server import (
     WebsocketServerTransport,
 )
 
-load_dotenv(override=True)
+
+
+
+# Load environment variables
+load_dotenv("/etc/secrets/.env")
+
+# Debug log the environment variables (masking sensitive data)
+for key in ["GROQ_API_KEY", "DEEPGRAM_API_KEY", "CARTESIA_API_KEY"]:
+    value = os.getenv(key)
+    if value:
+        masked_value = '*' * (len(value) - 4) + value[-4:]
+        logger.debug(f"{key}: {masked_value}")
+    else:
+        logger.warning(f"{key} not found in environment variables")
 
 logger.remove(0)
 logger.add(sys.stderr, level="DEBUG")
