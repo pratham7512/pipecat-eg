@@ -15,4 +15,4 @@ COPY . .
 EXPOSE ${PORT:-10000}
 
 # Command to run the application
-CMD ["python3", "app.py"]
+CMD ["python3", "bot.py"]
