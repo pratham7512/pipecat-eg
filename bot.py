@@ -3,7 +3,6 @@ import asyncio
 import os
 import sys
 from sys import platform
-from dotenv import load_dotenv
 from loguru import logger
 from pipecat.audio.vad.silero import SileroVADAnalyzer
 from pipecat.frames.frames import LLMMessagesFrame
@@ -19,34 +18,27 @@ from pipecat.transports.network.websocket_server import (
     WebsocketServerTransport,
 )
 
-# Configure environment variables
-def setup_environment():
-    # Try loading from /etc/secrets/.env first (Render production)
-    if os.path.exists('/etc/secrets/.env'):
-        load_dotenv('/etc/secrets/.env', override=True)
-    else:
-        # Fall back to local .env file (development)
-        load_dotenv(override=True)
-    
-    # Verify required environment variables
+# Configure logging
+logger.remove(0)
+logger.add(sys.stderr, level="DEBUG")
+
+def verify_environment():
+    """Verify all required environment variables are set"""
     required_vars = ['GROQ_API_KEY', 'DEEPGRAM_API_KEY', 'CARTESIA_API_KEY']
     missing_vars = [var for var in required_vars if not os.getenv(var)]
     
     if missing_vars:
         logger.error(f"Missing required environment variables: {', '.join(missing_vars)}")
         sys.exit(1)
-
-# Configure logging
-logger.remove(0)
-logger.add(sys.stderr, level="DEBUG")
+    logger.info("All required environment variables are set")
 
 async def main():
-    # Set up environment variables
-    setup_environment()
+    # Verify environment variables
+    verify_environment()
     
     transport = WebsocketServerTransport(
         host="0.0.0.0",
-        port=int(os.getenv('PORT', 10000)),  # Use PORT from environment or default to 10000
+        port=int(os.getenv('PORT', 10000)),
         params=WebsocketServerParams(
             audio_out_sample_rate=16000,
             audio_out_enabled=True,
