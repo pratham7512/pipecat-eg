@@ -9,7 +9,6 @@ import os
 import sys
 from sys import platform  # Import platform to check OS
 
-from dotenv import load_dotenv
 from loguru import logger
 
 from pipecat.audio.vad.silero import SileroVADAnalyzer
@@ -26,10 +25,15 @@ from pipecat.transports.network.websocket_server import (
     WebsocketServerTransport,
 )
 
-load_dotenv(override=True)
+
 
 logger.remove(0)
 logger.add(sys.stderr, level="DEBUG")
+# Add these debug logs after logger setup and before main()
+logger.debug("Starting application...")
+logger.debug(f"GROQ API Key: {'*' * 4 + os.environ.get('GROQ_API_KEY')[-4:] if os.environ.get('GROQ_API_KEY') else 'Not found'}")
+logger.debug(f"DEEPGRAM API Key: {'*' * 4 + os.environ.get('DEEPGRAM_API_KEY')[-4:] if os.environ.get('DEEPGRAM_API_KEY') else 'Not found'}")
+logger.debug(f"CARTESIA API Key: {'*' * 4 + os.environ.get('CARTESIA_API_KEY')[-4:] if os.environ.get('CARTESIA_API_KEY') else 'Not found'}")
 
 
 async def main():
