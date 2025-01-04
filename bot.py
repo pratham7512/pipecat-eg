@@ -10,7 +10,7 @@ from pipecat.pipeline.pipeline import Pipeline
 from pipecat.pipeline.runner import PipelineRunner
 from pipecat.pipeline.task import PipelineParams, PipelineTask
 from pipecat.processors.aggregators.openai_llm_context import OpenAILLMContext
-from pipecat.services.cartesia import CartesiaTTSService
+from pipecat.services.elevenlabs import ElevenLabsTTSService
 from pipecat.services.deepgram import DeepgramSTTService
 from pipecat.services.groq import GroqLLMService
 from pipecat.transports.network.websocket_server import (
@@ -24,7 +24,7 @@ logger.add(sys.stderr, level="DEBUG")
 
 def verify_environment():
     """Verify all required environment variables are set"""
-    required_vars = ['GROQ_API_KEY', 'DEEPGRAM_API_KEY', 'CARTESIA_API_KEY']
+    required_vars = ['GROQ_API_KEY', 'DEEPGRAM_API_KEY', 'ELEVENLABS_API_KEY']
     missing_vars = [var for var in required_vars if not os.getenv(var)]
     
     if missing_vars:
@@ -58,8 +58,8 @@ async def main():
         api_key=os.getenv("DEEPGRAM_API_KEY")
     )
     
-    tts = CartesiaTTSService(
-        api_key=os.getenv("CARTESIA_API_KEY"),
+    tts = ElevenLabsTTSService(
+        api_key=os.getenv("ELEVENLABS_API_KEY"),
         voice_id="79a125e8-cd45-4c13-8a67-188112f4dd22",  # British Lady
         sample_rate=16000,
     )
