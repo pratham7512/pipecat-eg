@@ -1,15 +1,18 @@
+# Dockerfile
 FROM python:3.10-bullseye
 
-RUN mkdir /app
-
-COPY *.py /app/
-COPY requirements.txt /app/
-COPY /etc/secrets/.env /app/.env
-
+# Create app directory
 WORKDIR /app
 
-RUN pip3 install -r requirements.txt
+# Copy only the requirements first to leverage Docker cache
+COPY requirements.txt .
+RUN pip3 install --no-cache-dir -r requirements.txt
 
-EXPOSE 7860
+# Copy application code
+COPY . .
 
-CMD ["python3", "bot.py"]
+# Expose the port the app runs on
+EXPOSE ${PORT:-10000}
+
+# Command to run the application
+CMD ["python3", "app.py"]
