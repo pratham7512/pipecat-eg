@@ -7,9 +7,9 @@
 import asyncio
 import os
 import sys
-from pathlib import Path
-from sys import platform
+from sys import platform  # Import platform to check OS
 
+from dotenv import load_dotenv
 from loguru import logger
 
 from pipecat.audio.vad.silero import SileroVADAnalyzer
@@ -26,53 +26,15 @@ from pipecat.transports.network.websocket_server import (
     WebsocketServerTransport,
 )
 
-def read_secret(secret_name):
-    secret_path = Path("/etc/secrets") / secret_name
-    if secret_path.exists():
-        return secret_path.read_text().strip()
-    return None
-
-# Read secrets directly
-GROQ_API_KEY = read_secret("GROQ_API_KEY")
-DEEPGRAM_API_KEY = read_secret("DEEPGRAM_API_KEY")
-CARTESIA_API_KEY = read_secret("CARTESIA_API_KEY")
-
-# Set environment variables
-if GROQ_API_KEY:
-    os.environ["GROQ_API_KEY"] = GROQ_API_KEY
-if DEEPGRAM_API_KEY:
-    os.environ["DEEPGRAM_API_KEY"] = DEEPGRAM_API_KEY
-if CARTESIA_API_KEY:
-    os.environ["CARTESIA_API_KEY"] = CARTESIA_API_KEY
-
-def check_required_secrets():
-    missing_secrets = []
-    for key in ["GROQ_API_KEY", "DEEPGRAM_API_KEY", "CARTESIA_API_KEY"]:
-        if not os.getenv(key):
-            missing_secrets.append(key)
-    
-    if missing_secrets:
-        raise RuntimeError(f"Missing required secrets: {', '.join(missing_secrets)}")
+load_dotenv(override=True)
 
 logger.remove(0)
 logger.add(sys.stderr, level="DEBUG")
 
-logger.debug("Starting application...")
-# Debug log the environment variables (masking sensitive data)
-for key in ["GROQ_API_KEY", "DEEPGRAM_API_KEY", "CARTESIA_API_KEY"]:
-    value = os.getenv(key)
-    if value:
-        masked_value = '*' * (len(value) - 4) + value[-4:]
-        logger.debug(f"{key}: {masked_value}")
-    else:
-        logger.warning(f"{key} not found in environment variables")
 
 async def main():
-    # Check for required secrets before starting
-    check_required_secrets()
-
     transport = WebsocketServerTransport(
-        host="0.0.0.0",
+        host="0.0.0.0",  # Add this line to bind to all interfaces
         port=10000,
         params=WebsocketServerParams(
             audio_out_sample_rate=16000,
@@ -84,10 +46,12 @@ async def main():
         )
     )
 
-    llm = GroqLLMService(api_key=GROQ_API_KEY, model="llama-3.1-70b-versatile")
-    stt = DeepgramSTTService(api_key=DEEPGRAM_API_KEY)
+    llm = GroqLLMService(api_key=os.getenv("GROQ_API_KEY"), model="llama-3.1-70b-versatile")
+
+    stt = DeepgramSTTService(api_key=os.getenv("DEEPGRAM_API_KEY"))
+
     tts = CartesiaTTSService(
-        api_key=CARTESIA_API_KEY,
+        api_key=os.getenv("CARTESIA_API_KEY"),
         voice_id="79a125e8-cd45-4c13-8a67-188112f4dd22",  # British Lady
         sample_rate=16000,
     )
@@ -128,9 +92,10 @@ async def main():
     if platform == "win32":
         logger.warning("Signal handling is not supported on Windows. Skipping signal handler setup.")
     else:
-        runner._setup_sigint()
+        runner._setup_sigint()  # Call this only if not on Windows
 
     await runner.run(task)
+
 
 if __name__ == "__main__":
     asyncio.run(main())
