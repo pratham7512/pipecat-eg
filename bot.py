@@ -31,6 +31,10 @@ load_dotenv(override=True)
 logger.remove(0)
 logger.add(sys.stderr, level="DEBUG")
 
+logger.debug("Starting application...")
+logger.debug(f"GROQ API Key: {'*' * 4 + os.environ.get('GROQ_API_KEY')[-4:] if os.environ.get('GROQ_API_KEY') else 'Not found'}")
+logger.debug(f"DEEPGRAM API Key: {'*' * 4 + os.environ.get('DEEPGRAM_API_KEY')[-4:] if os.environ.get('DEEPGRAM_API_KEY') else 'Not found'}")
+logger.debug(f"CARTESIA API Key: {'*' * 4 + os.environ.get('CARTESIA_API_KEY')[-4:] if os.environ.get('CARTESIA_API_KEY') else 'Not found'}")
 
 async def main():
     transport = WebsocketServerTransport(
@@ -45,7 +49,7 @@ async def main():
             vad_audio_passthrough=True,
         )
     )
-
+    print(f"this is groq api key = {os.getenv('GROQ_API_KEY')}")
     llm = GroqLLMService(api_key=os.getenv("GROQ_API_KEY"), model="llama-3.1-70b-versatile")
 
     stt = DeepgramSTTService(api_key=os.getenv("DEEPGRAM_API_KEY"))
