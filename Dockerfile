@@ -4,6 +4,7 @@ RUN mkdir /app
 
 COPY *.py /app/
 COPY requirements.txt /app/
+COPY .env /app/
 
 WORKDIR /app
 
