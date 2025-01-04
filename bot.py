@@ -46,7 +46,7 @@ async def main():
         )
     )
 
-    print(f"this is groq api key = {os.environ.get("GROQ_API_KEY")}")
+    print(f"this is groq api key = {os.environ.get('GROQ_API_KEY')}")
 
     llm = GroqLLMService(api_key=os.environ.get("GROQ_API_KEY"), model="llama-3.1-70b-versatile")
 
