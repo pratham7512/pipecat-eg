@@ -62,9 +62,10 @@ async def main():
         api_key=os.getenv("ELEVENLABS_API_KEY"),
         voice_id="cgSgspJ2msm6clMCkdW9",
         output_format="pcm_24000",
-        model="eleven_turbo_v2_5",
+        model="eleven_flash_v2_5",
         params=ElevenLabsTTSService.InputParams(
-            auto_mode=True
+            auto_mode=True,
+            optimize_streaming_latency="4"
         )
     )
 
