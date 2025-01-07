@@ -40,7 +40,7 @@ async def main():
         host="0.0.0.0",
         port=int(os.getenv('PORT', 10000)),
         params=WebsocketServerParams(
-            audio_out_sample_rate=24000,
+            audio_out_sample_rate=44100,
             audio_out_enabled=True,
             add_wav_header=True,
             vad_enabled=True,
