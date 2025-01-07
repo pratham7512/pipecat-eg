@@ -10,23 +10,35 @@
 
 syntax = "proto3";
 
-package audio;
+package pipecat;
 
-message AudioFrame {
-  bytes audio_data = 1;
-  int32 sample_rate = 2;
-  int32 num_channels = 3;
-  string frame_id = 4;
-  int64 timestamp = 5;
+message TextFrame {
+  uint64 id = 1;
+  string name = 2;
+  string text = 3;
 }
 
-message TranscriptFrame {
-  string text = 1;
-  bool is_final = 2;
-  float confidence = 3;
+message AudioRawFrame {
+  uint64 id = 1;
+  string name = 2;
+  bytes audio = 3;
+  uint32 sample_rate = 4;
+  uint32 num_channels = 5;
+  optional uint64 pts = 6;
 }
 
-message TTSFrame {
-  bytes audio_data = 1;
-  int32 sample_rate = 2;
+message TranscriptionFrame {
+  uint64 id = 1;
+  string name = 2;
+  string text = 3;
+  string user_id = 4;
+  string timestamp = 5;
+}
+
+message Frame {
+  oneof frame {
+    TextFrame text = 1;
+    AudioRawFrame audio = 2;
+    TranscriptionFrame transcription = 3;
+  }
 }

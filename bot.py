@@ -40,7 +40,7 @@ async def main():
         host="0.0.0.0",
         port=int(os.getenv('PORT', 10000)),
         params=WebsocketServerParams(
-            audio_out_sample_rate=16000,
+            audio_out_sample_rate=24000,
             audio_out_enabled=True,
             add_wav_header=True,
             vad_enabled=True,
@@ -61,7 +61,7 @@ async def main():
     tts = ElevenLabsTTSService(
         api_key=os.getenv("ELEVENLABS_API_KEY"),
         voice_id="cgSgspJ2msm6clMCkdW9",
-        output_format="pcm_16000",
+        output_format="pcm_24000",
         model="eleven_turbo_v2_5"
     )
 
@@ -91,8 +91,16 @@ async def main():
 
     @transport.event_handler("on_client_connected")
     async def on_client_connected(transport, client):
-        messages.append({"role": "system", "content": "Please introduce yourself to the user."})
+        logger.info(f"New client connected: {client.id}")
+        messages.append({
+            "role": "system", 
+            "content": "Hello! I'm your AI assistant. I can hear you clearly now. How can I help you today?"
+        })
         await task.queue_frames([LLMMessagesFrame(messages)])
+
+    @transport.event_handler("on_client_disconnected")
+    async def on_client_disconnected(transport, client):
+        logger.info(f"Client disconnected: {client.id}")
 
     runner = PipelineRunner()
     

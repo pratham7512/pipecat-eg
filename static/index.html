@@ -93,6 +93,9 @@
                 document.getElementById('stopBtn').disabled = false;
             } catch (e) {
                 console.error('Error starting conversation:', e);
+                document.getElementById('status').className = 'status disconnected';
+                document.getElementById('status').textContent = `Error: ${e.message}`;
+                await stop();
             }
         }
 
@@ -116,6 +119,16 @@
 
         // Handle page unload
         window.onbeforeunload = stop;
+
+        pc.onconnectionstatechange = () => {
+            const state = pc.connectionState;
+            console.log('Connection state:', state);
+            document.getElementById('status').textContent = `Connection: ${state}`;
+            
+            if (state === 'failed' || state === 'disconnected') {
+                stop();
+            }
+        };
     </script>
 </body>
 </html> 
