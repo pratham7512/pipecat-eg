@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Voice Chat</title>
+    <style>
+        .status {
+            margin: 20px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .connected { background: #dff0d8; }
+        .disconnected { background: #f2dede; }
+    </style>
+</head>
+<body>
+    <div id="status" class="status disconnected">Disconnected</div>
+    <button id="startBtn">Start Conversation</button>
+    <button id="stopBtn" disabled>Stop</button>
+
+    <script>
+        let pc;
+        let roomId;
+        
+        async function createPeerConnection() {
+            pc = new RTCPeerConnection({
+                iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+            });
+
+            // Handle incoming audio
+            pc.ontrack = (event) => {
+                const audio = new Audio();
+                audio.srcObject = event.streams[0];
+                audio.play();
+            };
+
+            // Add audio track
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            stream.getTracks().forEach(track => pc.addTrack(track, stream));
+
+            // ICE candidate handling
+            pc.onicecandidate = ({candidate}) => {
+                if (candidate) {
+                    fetch('/candidate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            roomId,
+                            candidate: candidate.candidate,
+                            sdpMid: candidate.sdpMid,
+                            sdpMLineIndex: candidate.sdpMLineIndex
+                        })
+                    });
+                }
+            };
+
+            return pc;
+        }
+
+        async function start() {
+            try {
+                // Create or join room
+                const response = await fetch('/createOrJoinRoom', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ roomId: '' })
+                });
+                const data = await response.json();
+                roomId = data.roomId;
+
+                // Create WebRTC connection
+                pc = await createPeerConnection();
+                
+                // Create and send offer
+                const offer = await pc.createOffer();
+                await pc.setLocalDescription(offer);
+                
+                const offerResponse = await fetch('/offer', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        roomId,
+                        sdp: pc.localDescription.sdp,
+                        type: pc.localDescription.type
+                    })
+                });
+                
+                const answer = await offerResponse.json();
+                await pc.setRemoteDescription(answer);
+                
+                document.getElementById('status').className = 'status connected';
+                document.getElementById('status').textContent = 'Connected';
+                document.getElementById('startBtn').disabled = true;
+                document.getElementById('stopBtn').disabled = false;
+            } catch (e) {
+                console.error('Error starting conversation:', e);
+            }
+        }
+
+        async function stop() {
+            if (pc) {
+                pc.close();
+                await fetch('/cleanup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ roomId })
+                });
+                document.getElementById('status').className = 'status disconnected';
+                document.getElementById('status').textContent = 'Disconnected';
+                document.getElementById('startBtn').disabled = false;
+                document.getElementById('stopBtn').disabled = true;
+            }
+        }
+
+        document.getElementById('startBtn').onclick = start;
+        document.getElementById('stopBtn').onclick = stop;
+
+        // Handle page unload
+        window.onbeforeunload = stop;
+    </script>
+</body>
+</html> 
