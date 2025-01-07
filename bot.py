@@ -40,7 +40,7 @@ async def main():
         host="0.0.0.0",
         port=int(os.getenv('PORT', 10000)),
         params=WebsocketServerParams(
-            audio_out_sample_rate=44100,
+            audio_out_sample_rate=24000,
             audio_out_enabled=True,
             add_wav_header=True,
             vad_enabled=True,
@@ -60,8 +60,8 @@ async def main():
     
     tts = ElevenLabsTTSService(
         api_key=os.getenv("ELEVENLABS_API_KEY"),
-        voice_id="cgSgspJ2msm6clMCkdW9",
-        output_format="pcm_44100",
+        voice_id="gs0tAILXbY5DNrJrsM6F",
+        output_format="pcm_24000",
         model="eleven_flash_v2_5",
         params=ElevenLabsTTSService.InputParams(
             auto_mode=True,
