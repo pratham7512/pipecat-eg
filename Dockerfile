@@ -1,33 +1,18 @@
 # Dockerfile
-FROM python:3.11-slim
+FROM python:3.10-bullseye
 
-# Install system dependencies for aiortc
-RUN apt-get update && apt-get install -y \
-    libavdevice-dev \
-    libavfilter-dev \
-    libopus-dev \
-    libvpx-dev \
-    pkg-config \
-    && rm -rf /var/lib/apt/lists/*
-
+# Create app directory
 WORKDIR /app
 
-# Copy requirements first for better caching
+# Copy only the requirements first to leverage Docker cache
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip3 install --no-cache-dir -r requirements.txt
 
-# Copy application files
+# Copy application code
 COPY . .
 
-# Create directory for static files
-RUN mkdir -p static
+# Expose the port the app runs on
+EXPOSE ${PORT:-10000}
 
-# Environment variables
-ENV PORT=8080
-ENV PYTHONUNBUFFERED=1
-
-# Expose port
-EXPOSE 8080
-
-# Run the application
-CMD ["python", "bot.py"]
+# Command to run the application
+CMD ["python3", "bot.py"]

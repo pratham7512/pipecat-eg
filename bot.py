@@ -118,9 +118,9 @@ def build_pipeline() -> tuple[PipelineTask, MemoryTransport]:
     stt = DeepgramSTTService(api_key=deepgram_api_key)
     tts = ElevenLabsTTSService(
         api_key=elevenlabs_api_key,
-        voice_id="EXAMPLE_VOICE_ID",
+        voice_id="cgSgspJ2msm6clMCkdW9",
         output_format="pcm_16000",
-        model="eleven_monolingual_v1"
+        model="eleven_turbo_v2_5"
     )
 
     # Context aggregator for conversation
